@@ -1,10 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
-	"encoding/json"
 	"net/http"
+	"os/exec"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -29,7 +31,35 @@ func main() {
 }
 
 func getHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello World!")
+	var err error
+	var cmd *exec.Cmd
+
+	// Trigger Minecraft server to list game rules
+	echo := "echo \"gamerule\" > /run/minecraft.stdin"
+	cmd = exec.Command("bash", "-c", echo)
+	err = cmd.Run()
+
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "An error ocurred while trying to send the gamerule command")
+		return
+	}
+
+	time.Sleep(time.Second)
+	// Retrieve the output of the gamerule command
+	journal := "journalctl -u minecraft.service -n 1 --no-pager"
+	cmd = exec.Command("bash", "-c", journal)
+	stdout, err := cmd.Output()
+
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "An error ocurred while trying to retrieve the gamerule command output")
+		return
+	}
+	fmt.Println(string(stdout))
+	fmt.Fprintf(w, string(stdout))
 }
 
 type CmdRequest struct {
@@ -37,13 +67,30 @@ Command string `json:"command"`
 }
 
 func runHandler(w http.ResponseWriter, r *http.Request) {
-	var cmd CmdRequest;
+	var err error
+	var cmd *exec.Cmd
+	var cmdRequest CmdRequest
+	var cmdText string
+	
 	reqBody, _ := io.ReadAll(r.Body)
-	json.Unmarshal([]byte(reqBody), &cmd)
-	if cmd.Command == "showcoordinates" {
+	json.Unmarshal([]byte(reqBody), &cmdRequest)
+	if cmdRequest.Command == "showcoordinates" {
 		fmt.Println("executing showing coordinates")
-	} else if cmd.Command == "hidecoordinates" {
+		cmdText = "echo \"gamerule showcoordinates true\" > /run/minecraft.stdin"
+		cmd = exec.Command("bash", "-c", cmdText)
+		err = cmd.Run()
+	} else if cmdRequest.Command == "hidecoordinates" {
 		fmt.Println("executing hiding coordinates")
+		cmdText = "echo \"gamerule showcoordinates false\" > /run/minecraft.stdin"
+		cmd = exec.Command("bash", "-c", cmdText)
+		err = cmd.Run()
+	}
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "An error ocurred while updating the settings")
+		return
+
 	}
 	fmt.Fprintf(w, "{\"text\": \"Saved!\"}")
 }

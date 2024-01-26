@@ -9,6 +9,12 @@
 <h3>Commands</h3>
 <button type="submit" onclick="runCommand('showcoordinates')">Show Coordinates</button>
 <button type="submit" onclick="runCommand('hidecoordinates')">Hide Coordinates</button>
+<div>
+	<button type="submit" onclick="updatePage()">View Current Settings</button>
+	<div id="settings">
+		Click "View Current Settings" to retrieve the current server settings
+	</div>		
+</div>
 <script>
 	let runCommand = async (command) => {
 		const response = await fetch("/run-commands", {
@@ -23,11 +29,13 @@
 		});
 		const parsedResponse = await response.json();
 		console.log(parsedResponse );
+		updatePage()
 	}
 	let updatePage = async () => {
+		document.getElementById('settings').innerText = 'Fetching latest configs...';
 		const response = await fetch("/get-commands");
-		const movies = await response.json();
-		console.log(movies);
+		const responseText = await response.text();
+		document.getElementById('settings').innerText = responseText;
 	}
 </script>
 </body>
