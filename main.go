@@ -84,7 +84,18 @@ func runHandler(w http.ResponseWriter, r *http.Request) {
 		cmdText = "echo \"gamerule showcoordinates false\" > /run/minecraft.stdin"
 		cmd = exec.Command("bash", "-c", cmdText)
 		err = cmd.Run()
+	} else if cmdRequest.Command == "keepinventoryon" {
+		fmt.Println("executing keep inventory")
+		cmdText = "echo \"gamerule keepinventory true\" > /run/minecraft.stdin"
+		cmd = exec.Command("bash", "-c", cmdText)
+		err = cmd.Run()
+	} else if cmdRequest.Command == "keepinventoryoff" {
+		fmt.Println("executing don't keep inventory")
+		cmdText = "echo \"gamerule keepinventory false\" > /run/minecraft.stdin"
+		cmd = exec.Command("bash", "-c", cmdText)
+		err = cmd.Run()
 	}
+
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(500)
