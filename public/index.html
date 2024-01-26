@@ -1,1 +1,34 @@
-hi
+<!DOCTYPE html>
+<html>
+<head>
+<title>Minecraft Bedrock Control</title>
+</head>
+<body>
+
+<h1>Minecraft Bedrock Control</h1>
+<h3>Commands</h3>
+<button type="submit" onclick="runCommand('showcoordinates')">Show Coordinates</button>
+<button type="submit" onclick="runCommand('hidecoordinates')">Hide Coordinates</button>
+<script>
+	let runCommand = async (command) => {
+		const response = await fetch("/run-commands", {
+			method: 'post',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json'
+			},
+		        body: JSON.stringify({
+				command: command
+			})
+		});
+		const parsedResponse = await response.json();
+		console.log(parsedResponse );
+	}
+	let updatePage = async () => {
+		const response = await fetch("/get-commands");
+		const movies = await response.json();
+		console.log(movies);
+	}
+</script>
+</body>
+</html>
