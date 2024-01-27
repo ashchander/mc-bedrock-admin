@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -33,9 +34,26 @@ func main() {
 
 func parseConfig(config string) (string, error) {
 	const LOG_PREFIX = "INFO] "
+	if len(config) == 0 {
+		return "", errors.New("Failed to parse config - No config provided")
+	}
+
 	removedLogPrefix := config[strings.Index(config, LOG_PREFIX) + 6:]
-	fmt.Println(removedLogPrefix)
-	return "", nil
+	if len(removedLogPrefix) == 0 {
+		return "", errors.New("Failed to parse config - Invalid config provided")
+	}
+
+	jsonString := "{"
+	configSlice := strings.Split(removedLogPrefix, ",")
+	for i, v := range configSlice {
+		parsedLine := strings.Split(strings.TrimSpace(v), " ")
+		jsonString += fmt.Sprintf("\"%s\":%s", parsedLine[0], parsedLine[2])
+		if i != len(configSlice) - 1 {
+			jsonString += ", "
+		}
+	}
+	jsonString += "}"
+	return jsonString, nil
 }
 
 func getHandler(w http.ResponseWriter, r *http.Request) {
