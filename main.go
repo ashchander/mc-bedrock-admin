@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -30,6 +31,13 @@ func main() {
 	http.ListenAndServe(":8080", r)
 }
 
+func parseConfig(config string) (string, error) {
+	const LOG_PREFIX = "INFO] "
+	removedLogPrefix := config[strings.Index(config, LOG_PREFIX) + 6:]
+	fmt.Println(removedLogPrefix)
+	return "", nil
+}
+
 func getHandler(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var cmd *exec.Cmd
@@ -46,7 +54,9 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Sleep to give time for first command to process
 	time.Sleep(time.Second)
+
 	// Retrieve the output of the gamerule command
 	journal := "journalctl -u minecraft.service -n 1 --no-pager"
 	cmd = exec.Command("bash", "-c", journal)
@@ -58,8 +68,16 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "An error ocurred while trying to retrieve the gamerule command output")
 		return
 	}
-	fmt.Println(string(stdout))
-	fmt.Fprintf(w, string(stdout))
+
+	jsonOutput, err := parseConfig(string(stdout))
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(500)
+		fmt.Fprintf(w, "An error ocurred while trying to parse config")
+		return
+	}
+	fmt.Println(jsonOutput)
+	fmt.Fprintf(w, jsonOutput)
 }
 
 type CmdRequest struct {
