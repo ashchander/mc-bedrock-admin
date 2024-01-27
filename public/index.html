@@ -36,9 +36,15 @@
 	let updatePage = async () => {
 		document.getElementById('settings').innerText = 'Fetching latest configs...';
 		const response = await fetch("/get-commands");
-		const responseText = await response.text();
-		document.getElementById('settings').innerText = responseText;
+		let configs = await response.json();
+		let output = '<ul>';
+		for (const [key, value] of Object.entries(configs)) {
+			output += `<li><span class="command">${key}:</span> <span class="val${value}">${value}</span></li>`;
+		}
+		output += '</ul>';
+		document.getElementById('settings').innerHTML = output;
 	}
+	updatePage();
 </script>
 </body>
 </html>

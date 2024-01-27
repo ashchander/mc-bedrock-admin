@@ -88,13 +88,13 @@ func getHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	jsonOutput, err := parseConfig(string(stdout))
+	fmt.Println(jsonOutput)
 	if err != nil {
 		fmt.Println(err)
 		w.WriteHeader(500)
 		fmt.Fprintf(w, "An error ocurred while trying to parse config")
 		return
 	}
-	fmt.Println(jsonOutput)
 	fmt.Fprintf(w, jsonOutput)
 }
 
